@@ -1,0 +1,27 @@
+.page-header {
+    background-color: #204e99;
+    margin-top: 0;
+    padding: 20px 20px 20px 40px;
+}
+
+.page-header h1, .page-header h1 a, .page-header h1 a:visited {
+    color: #dddddd;
+    font-size: 36pt;
+    text-decoration: none;
+}
+
+.page-header h2, .page-header h2 a, .page-header h2 a:visited {
+    color: #dddddd;
+    font-size: 30pt;
+    text-decoration: none;
+}
+
+.sidebar {
+    background-color: #3961a0;
+    margin-top: 0;
+}
+
+.maininfo {
+    color: #111111;
+    font-size: 48pt;
+}

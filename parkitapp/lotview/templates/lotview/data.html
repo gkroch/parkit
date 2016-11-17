@@ -1,0 +1,23 @@
+<html>
+  <head>
+    {% load staticfiles %}
+    <link href="{% static 'bootstrap/css/bootstrap.min.css' %}"
+          rel="stylesheet">
+    <link href="{% static 'bootstrap/css/bootstrap-theme.min.css' %}"
+          rel="stylesheet">
+    <link href="{% static 'css/index.css'%}" rel="stylesheet">
+    <title>ParkIt Data Submission</title>
+  </head>
+  <body>
+    <h1>Submitted a Sensor Event</h1>
+    <p>New sensor event: {{ sensorevent }}</p>
+    {% if direction is 'e' %}
+    <h2>Entering the lot</h2>
+    {% endif %}
+    {% if direction is 'x' %}
+    <h2>Exiting the lot</h2>
+    {% else %}
+    <h2>Unknown direction</h2>
+    {% endif %}
+  </body>
+</html>

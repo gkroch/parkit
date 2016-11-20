@@ -25,7 +25,9 @@ SECRET_KEY = '9s^o8l*kz21a#$tp3*4s2e)g_ey9p_wj54obsk+hubk0f^=+g)'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['gkroch.pythonanywhere.com',
+                 'colab-sbx-308.oit.duke.edu',
+                 'localhost']
 
 
 # Application definition

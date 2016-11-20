@@ -12,11 +12,9 @@ class Lot(models.Model):
 class Node(models.Model):
     location = models.CharField(max_length=50)
     lot = models.ForeignKey(Lot)
+    net_change = models.IntegerField()
 
-    # Net change of entries and exits via node
-    def net_change():
-        pass
-
+    
     def __str__(self):
         return self.location
 

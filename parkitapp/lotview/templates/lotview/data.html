@@ -1,4 +1,5 @@
-<html>
+<!DOCTYPE html>
+<html lang="en-us">
   <head>
     {% load staticfiles %}
     <link href="{% static 'bootstrap/css/bootstrap.min.css' %}"
@@ -6,15 +7,15 @@
     <link href="{% static 'bootstrap/css/bootstrap-theme.min.css' %}"
           rel="stylesheet">
     <link href="{% static 'css/index.css'%}" rel="stylesheet">
+    <meta charset="UTF-8">
     <title>ParkIt Data Submission</title>
   </head>
   <body>
     <h1>Submitted a Sensor Event</h1>
     <p>New sensor event: {{ sensorevent }}</p>
-    {% if direction is 'e' %}
+    {% if direction == 'e' %}
     <h2>Entering the lot</h2>
-    {% endif %}
-    {% if direction is 'x' %}
+    {% elif direction == 'x' %}
     <h2>Exiting the lot</h2>
     {% else %}
     <h2>Unknown direction</h2>

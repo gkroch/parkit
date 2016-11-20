@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
 from django.views.decorators.http import require_http_methods
 import datetime
@@ -15,14 +15,32 @@ def index(request):
 
     return render(request, 'lotview/index.html', context)
 
+
 @require_http_methods(["POST","GET"])
 def data(request, nodeID, direct):
     time = datetime.datetime.now() # Get current time
 
     # Create sensor event
-    tempnode = Node.objects.get(pk=nodeID)
-    sensorevent = SensorEvent(timestamp=time,node=tempnode,direction=direct)
+    
+    tempnode = get_object_or_404(Node, pk=nodeID)
+    templot = tempnode.lot
+    sensorevent = SensorEvent(timestamp=time,node=tempnode,
+                              direction=direct)
     sensorevent.save()
+
+    # Update database (TODO replace with update function)
+    if direct == 'e':
+        tempnode.net_change -= 1
+        tempnode.save()
+        templot.spots_remaining -= 1
+        templot.save()
+    elif direct == 'x':
+        tempnode.net_change += 1
+        tempnode.save()
+        templot.spots_remaining += 1
+        templot.save()
+
+    
 
     context = {
         'sensorevent' : sensorevent,

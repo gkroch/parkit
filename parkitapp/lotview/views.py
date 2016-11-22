@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpRequest, JsonResponse
 from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
 import datetime
 
 from .models import SensorEvent, Node, Lot
@@ -16,12 +17,17 @@ def index(request):
     return render(request, 'lotview/index.html', context)
 
 
-@require_http_methods(["POST","GET"])
-def data(request, nodeID, direct):
+@require_http_methods(["POST"])
+@csrf_exempt
+def data(request):
     time = datetime.datetime.now() # Get current time
 
+    # Get data from POST request
+    data = request.POST
+    nodeID = data.__getitem__('node')
+    direct = data.__getitem__('direction')
+
     # Create sensor event
-    
     tempnode = get_object_or_404(Node, pk=nodeID)
     templot = tempnode.lot
     sensorevent = SensorEvent(timestamp=time,node=tempnode,
@@ -40,12 +46,14 @@ def data(request, nodeID, direct):
         templot.spots_remaining += 1
         templot.save()
 
-    
-
     context = {
-        'sensorevent' : sensorevent,
         'timestamp'   : time,
         'direction'   : direct,
+        'node'        : tempnode.net_change,
+        'lot'         : templot.spots_remaining
     }
 
-    return render(request, 'lotview/data.html', context)
+    response = JsonResponse(context)
+
+    return response
+    # return render(request, 'lotview/data.html', context)

@@ -19,17 +19,13 @@ class Node(models.Model):
         return self.location
 
 class SensorEvent(models.Model):
-    DIRECTIONS = (
-        ('e','Entry'),
-        ('x','Exit'),
-        ('u','Unknown'),
-        )
-    
     timestamp = models.DateTimeField('Timestamp')
     node = models.ForeignKey(Node)
-    direction = models.CharField(max_length=1, choices=DIRECTIONS) 
+
+    # Positive for exit, negative for entry
+    net_change = models.IntegerField()
 
     def __str__(self):
         return str(self.node) + " " + str(self.timestamp) + " " + \
-            str(self.direction)
+            str(self.net_change)
     

@@ -24,36 +24,29 @@ def data(request):
 
     # Get data from POST request
     data = request.POST
-    nodeID = data.__getitem__('node')
-    direct = data.__getitem__('direction')
+    nodeID = int(data.__getitem__('node'))
+    net = int(data.__getitem__('net'))
 
     # Create sensor event
     tempnode = get_object_or_404(Node, pk=nodeID)
     templot = tempnode.lot
     sensorevent = SensorEvent(timestamp=time,node=tempnode,
-                              direction=direct)
+                              net_change=net)
     sensorevent.save()
 
-    # Update database (TODO replace with update function)
-    if direct == 'e':
-        tempnode.net_change -= 1
-        tempnode.save()
-        templot.spots_remaining -= 1
-        templot.save()
-    elif direct == 'x':
-        tempnode.net_change += 1
-        tempnode.save()
-        templot.spots_remaining += 1
-        templot.save()
-
+    # Update database
+    tempnode.net_change += sensorevent.net_change
+    tempnode.save()
+    templot.spots_remaining += sensorevent.net_change
+    templot.save()
+    
     context = {
         'timestamp'   : time,
-        'direction'   : direct,
-        'node'        : tempnode.net_change,
-        'lot'         : templot.spots_remaining
+        'sensor_net'  : net,
+        'node_change' : tempnode.net_change,
+        'lot_total'   : templot.spots_remaining
     }
 
     response = JsonResponse(context)
 
     return response
-    # return render(request, 'lotview/data.html', context)

@@ -24,8 +24,18 @@ def data(request):
 
     # Get data from POST request
     data = request.POST
-    nodeID = int(data.__getitem__('node'))
+    print(data);
+    particleID = data.__getitem__('node')
     net = int(data.__getitem__('net'))
+
+    
+    # Convert particleIDs to nodeIDs
+    if particleID == '480029000b51343334363138':
+        nodeID = 0
+    elif particleID == '39005f000a51343334363138':
+        nodeID = 1
+    else:
+        pass # Should throw error
 
     # Create sensor event
     tempnode = get_object_or_404(Node, pk=nodeID)

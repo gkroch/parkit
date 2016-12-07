@@ -1,4 +1,5 @@
 #include "SparkJson/SparkJson.h"
+//#include ""
 
 int led = D7;  // The on-board LED
 int lotTotal = 0;
@@ -17,23 +18,26 @@ int timercount = 0;
 int timercount2 = 0;
 int detectmax;
 int detectmax2;
+int old_count;
+bool web_flag;
+
+Timer timer(10000,pushToWeb);
 
 void setup() {
     Serial.begin(9600);
     
     // Write HIGH to turn these segments on
-    
-    // LED 1
+    // Left LED
     pinMode(C0, OUTPUT); // DP
     pinMode(C1, OUTPUT); // B
     pinMode(C2, OUTPUT); // C
-    pinMode(C3, OUTPUT); // D
-    pinMode(C4, OUTPUT); // E
+    pinMode(C4, OUTPUT); // D
+    pinMode(C3, OUTPUT); // E
     pinMode(C5, OUTPUT); // G
     pinMode(D0, OUTPUT); // F
     pinMode(D1, OUTPUT); // A
     
-    // LED 2
+    // RIGHT LED
     pinMode(B0, OUTPUT); // DP
     pinMode(B1, OUTPUT); // B
     pinMode(B2, OUTPUT); // C
@@ -52,17 +56,34 @@ void setup() {
     digitalWrite(sensorPin, HIGH);  // TODO Ask Sergio
     // pinMode(ledPin2, OUTPUT);
     digitalWrite(sensorPin2, HIGH);
+    
+    ledNumber(0, true);
+    ledNumber(0, false);
+    timer.start();
+    old_count = 0;
+    web_flag=false;
+    Serial.println("Completes setup");
 }
 
-      
-void loop() {
     
-    // Publish sensor_event to stream
-    String eventData = "1";
-    Particle.publish("sensor_event", eventData, PRIVATE);
+void pushToWeb(){
+    Serial.println("Set Web Flag");
+    web_flag = true;
+}  
+    
 
-    // Integrated code
-
+// // Sample and determine if event occurred
+void loop() {
+    if(web_flag){
+        Serial.println("Begin Publish");
+        String eventData = String(count-old_count);
+        Particle.publish("sensor_event", eventData, PRIVATE);
+        old_count = count;
+        web_flag = false;
+        Serial.println("End Publish");
+    }
+     // Integrated code
+    //Serial.println("Begin Loop");
     // Initialize vars
     int numReading = 0;
     int total = 0;
@@ -70,7 +91,8 @@ void loop() {
     detectmax = 0;
     detectmax2 = 0;
     
-    while (millis() < 2000) {
+    //Serial.printf("Current Time: %d \n",millis());
+    while (millis() < 8000) {
     numReading++;
         sensorValue = analogRead(sensorPin);
         //averageValue += ( (float)sensorValue - averageValue )/10.f; // SET UP FIRST SENSOR
@@ -89,7 +111,7 @@ void loop() {
     sensorValue = analogRead(sensorPin);
     float voltage = sensorValue * (5.0 / 1023.0);
     
-    while (sensorValue > averageValue + 5) {  //MONITOR SENSOR FOR A HIT
+    while (sensorValue > averageValue + 30) {  //MONITOR SENSOR FOR A HIT
         timercount = millis(); //  Print out the timing instance (will reset after 50 days).  Use to compare and account for direction.
         Serial.println("in while loop");
         if(sensorValue > detectmax){
@@ -100,6 +122,8 @@ void loop() {
         delay(35);
         sensorValue = analogRead(sensorPin);
         //Serial.println(detectmax);
+        //Serial.printf("Average Value: %f \n",averageValue);
+        //Serial.printf("Sensor Value: %d \n",sensorValue);
     }
     
     if (detectmax > 0) {
@@ -113,7 +137,7 @@ void loop() {
     sensorValue2 = analogRead(sensorPin2);
     float voltage2 = sensorValue2 * (5.0 / 1023.0);
     
-    while (sensorValue2 > averageValue2 + 5) { //MONITOR SENSOR2 FOR A HIT
+    while (sensorValue2 > averageValue2 + 30) { //MONITOR SENSOR2 FOR A HIT
         timercount2 = millis(); //  Print out the timing instance (will reset after 50 days).  Use to compare and account for direction.
         if(sensorValue2 > detectmax2){
             detectmax2 = sensorValue2;
@@ -150,10 +174,14 @@ void loop() {
           timercount2 = 0;
         }
     }
+    //count++;
+    //Serial.println("End Loop");
+    //delay(3000);
+    
 }
 
+// Handle the subscribe event
 void myHandler(const char *event, const char *data) {
-    // Handle the integration response
     Serial.println(data);
     
     char * jsonData = strdup(data);
@@ -169,120 +197,151 @@ void myHandler(const char *event, const char *data) {
     Serial.print("The Lot Total is: ");
     Serial.println(lotTotal);
     
-    digitalWrite(D3, HIGH);
-    ledNumber(lotTotal % 10);
+    // Set LEDs
+    ledNumber(lotTotal % 10, true); // Right LED (LSD)
+    ledNumber(lotTotal / 10, false); // Left LED (MSD)
 }
 
-void ledNumber(int value) {
+// Write to the LEDs
+void ledNumber(int value, bool left) {
+    int p0;
+    int p1;
+    int p2;
+    int p3;
+    int p4;
+    int p5;
+    int p6;
+    int p7;
+    if(left) {
+        p0 = C0;
+        p1 = C1;
+        p2 = C2;
+        p3 = C3;
+        p4 = C4;
+        p5 = C5;
+        p6 = D0;
+        p7 = D1;
+    }
+    else {
+        p0 = B0;
+        p1 = B1;
+        p2 = B2;
+        p3 = B3;
+        p4 = B4;
+        p5 = B5;
+        p6 = A0;
+        p7 = A1;
+    }
+    
     switch (value) {
         case 0:
-            digitalWrite(C0, LOW);
-            digitalWrite(C1, HIGH);
-            digitalWrite(C2, HIGH);
-            digitalWrite(C3, HIGH);
-            digitalWrite(C4, HIGH);
-            digitalWrite(C5, LOW);
-            digitalWrite(D0, HIGH);
-            digitalWrite(D1, HIGH);
+            digitalWrite(p0, LOW);
+            digitalWrite(p1, HIGH);
+            digitalWrite(p2, HIGH);
+            digitalWrite(p3, HIGH);
+            digitalWrite(p4, HIGH);
+            digitalWrite(p5, LOW);
+            digitalWrite(p6, HIGH);
+            digitalWrite(p7, HIGH);
             break;
         case 1:
-            digitalWrite(C0, LOW);
-            digitalWrite(C1, HIGH);
-            digitalWrite(C2, HIGH);
-            digitalWrite(C3, LOW);
-            digitalWrite(C4, LOW);
-            digitalWrite(C5, LOW);
-            digitalWrite(D0, LOW);
-            digitalWrite(D1, LOW);
+            digitalWrite(p0, LOW);
+            digitalWrite(p1, HIGH);
+            digitalWrite(p2, HIGH);
+            digitalWrite(p3, LOW);
+            digitalWrite(p4, LOW);
+            digitalWrite(p5, LOW);
+            digitalWrite(p6, LOW);
+            digitalWrite(p7, LOW);
             break;
         case 2:
-            digitalWrite(C0, LOW);
-            digitalWrite(C1, HIGH);
-            digitalWrite(C2, LOW);
-            digitalWrite(C3, HIGH);
-            digitalWrite(C4, HIGH);
-            digitalWrite(C5, HIGH);
-            digitalWrite(D0, LOW);
-            digitalWrite(D1, HIGH);
+            digitalWrite(p0, LOW);
+            digitalWrite(p1, HIGH);
+            digitalWrite(p2, LOW);
+            digitalWrite(p3, HIGH);
+            digitalWrite(p4, HIGH);
+            digitalWrite(p5, HIGH);
+            digitalWrite(p7, LOW);
+            digitalWrite(p7, HIGH);
             break;
         case 3:
-            digitalWrite(C0, LOW);
-            digitalWrite(C1, HIGH);
-            digitalWrite(C2, HIGH);
-            digitalWrite(C3, LOW);
-            digitalWrite(C4, HIGH);
-            digitalWrite(C5, HIGH);
-            digitalWrite(D0, LOW);
-            digitalWrite(D1, HIGH);
+            digitalWrite(p0, LOW);
+            digitalWrite(p1, HIGH);
+            digitalWrite(p2, HIGH);
+            digitalWrite(p3, LOW);
+            digitalWrite(p4, HIGH);
+            digitalWrite(p5, HIGH);
+            digitalWrite(p6, LOW);
+            digitalWrite(p7, HIGH);
             break;
         case 4:
-            digitalWrite(C0, LOW);
-            digitalWrite(C1, HIGH);
-            digitalWrite(C2, HIGH);
-            digitalWrite(C3, LOW);
-            digitalWrite(C4, LOW);
-            digitalWrite(C5, HIGH);
-            digitalWrite(D0, HIGH);
-            digitalWrite(D1, LOW);
+            digitalWrite(p0, LOW);
+            digitalWrite(p1, HIGH);
+            digitalWrite(p2, HIGH);
+            digitalWrite(p3, LOW);
+            digitalWrite(p4, LOW);
+            digitalWrite(p5, HIGH);
+            digitalWrite(p6, HIGH);
+            digitalWrite(p7, LOW);
             break;
         case 5:
-            digitalWrite(C0, LOW);
-            digitalWrite(C1, LOW);
-            digitalWrite(C2, HIGH);
-            digitalWrite(C3, LOW);
-            digitalWrite(C4, HIGH);
-            digitalWrite(C5, HIGH);
-            digitalWrite(D0, HIGH);
-            digitalWrite(D1, HIGH);
+            digitalWrite(p0, LOW);
+            digitalWrite(p1, LOW);
+            digitalWrite(p2, HIGH);
+            digitalWrite(p3, LOW);
+            digitalWrite(p4, HIGH);
+            digitalWrite(p5, HIGH);
+            digitalWrite(p6, HIGH);
+            digitalWrite(p7, HIGH);
             break;
         case 6:
-            digitalWrite(C0, LOW);
-            digitalWrite(C1, LOW);
-            digitalWrite(C2, HIGH);
-            digitalWrite(C3, HIGH);
-            digitalWrite(C4, HIGH);
-            digitalWrite(C5, HIGH);
-            digitalWrite(D0, HIGH);
-            digitalWrite(D1, HIGH);
+            digitalWrite(p0, LOW);
+            digitalWrite(p1, LOW);
+            digitalWrite(p2, HIGH);
+            digitalWrite(p3, HIGH);
+            digitalWrite(p4, HIGH);
+            digitalWrite(p5, HIGH);
+            digitalWrite(p6, HIGH);
+            digitalWrite(p7, HIGH);
             break;
         case 7:
-            digitalWrite(C0, LOW);
-            digitalWrite(C1, HIGH);
-            digitalWrite(C2, HIGH);
-            digitalWrite(C3, LOW);
-            digitalWrite(C4, LOW);
-            digitalWrite(C5, LOW);
-            digitalWrite(D0, LOW);
-            digitalWrite(D1, HIGH);
+            digitalWrite(p0, LOW);
+            digitalWrite(p1, HIGH);
+            digitalWrite(p2, HIGH);
+            digitalWrite(p3, LOW);
+            digitalWrite(p4, LOW);
+            digitalWrite(p5, LOW);
+            digitalWrite(p6, LOW);
+            digitalWrite(p7, HIGH);
             break;
         case 8:
-            digitalWrite(C0, LOW);
-            digitalWrite(C1, HIGH);
-            digitalWrite(C2, HIGH);
-            digitalWrite(C3, HIGH);
-            digitalWrite(C4, HIGH);
-            digitalWrite(C5, HIGH);
-            digitalWrite(D0, HIGH);
-            digitalWrite(D1, HIGH);
+            digitalWrite(p0, LOW);
+            digitalWrite(p1, HIGH);
+            digitalWrite(p2, HIGH);
+            digitalWrite(p3, HIGH);
+            digitalWrite(p4, HIGH);
+            digitalWrite(p5, HIGH);
+            digitalWrite(p6, HIGH);
+            digitalWrite(p7, HIGH);
             break;
         case 9:
-            digitalWrite(C0, LOW);
-            digitalWrite(C1, HIGH);
-            digitalWrite(C2, HIGH);
-            digitalWrite(C3, LOW);
-            digitalWrite(C4, HIGH);
-            digitalWrite(C5, HIGH);
-            digitalWrite(D0, HIGH);
-            digitalWrite(D1, HIGH);
+            digitalWrite(p0, LOW);
+            digitalWrite(p1, HIGH);
+            digitalWrite(p2, HIGH);
+            digitalWrite(p3, LOW);
+            digitalWrite(p4, HIGH);
+            digitalWrite(p5, HIGH);
+            digitalWrite(p6, HIGH);
+            digitalWrite(p7, HIGH);
             break;
         default:
-            digitalWrite(C0, HIGH);
-            digitalWrite(C1, HIGH);
-            digitalWrite(C2, HIGH);
-            digitalWrite(C3, HIGH);
-            digitalWrite(C4, HIGH);
-            digitalWrite(C5, HIGH);
-            digitalWrite(D0, HIGH);
-            digitalWrite(D1, HIGH);
+            digitalWrite(p0, HIGH);
+            digitalWrite(p1, HIGH);
+            digitalWrite(p2, HIGH);
+            digitalWrite(p3, HIGH);
+            digitalWrite(p4, HIGH);
+            digitalWrite(p5, HIGH);
+            digitalWrite(p6, HIGH);
+            digitalWrite(p7, HIGH);
     }
 }
